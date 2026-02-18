@@ -1,105 +1,96 @@
 # Soulwi Backend Showcase (Go)
 
-Public showcase of the Soulwi backend service, focused on Go architecture and API implementation quality.
+Публичный showcase Go-бэкенда проекта Soulwi с фокусом на инженерное качество: архитектура, модульность, читаемость и поддерживаемость.
 
-## What this repository contains
+## Что здесь важно
 
-- Go API service (`gin`) with layered architecture.
-- PostgreSQL persistence via `gorm`.
-- Background jobs and notification flows.
-- Auth middleware (JWT + optional Firebase verification).
+- Слоистая архитектура: `handler -> usecase -> repository`.
+- Явное разделение ответственности по пакетам и фичам.
+- Ручной DI-контейнер для прозрачного wiring зависимостей.
+- Контракты через интерфейсы (удобно для тестирования и замены реализаций).
+- Централизованные middleware (auth, rate limit, лимиты сообщений).
+- Чистая структура `internal/*` без смешивания бизнес-логики и транспорта.
 
-This repo is intentionally scoped to backend code for recruiter review.
-
-## Tech stack
+## Стек
 
 - Go 1.23+
 - Gin (`github.com/gin-gonic/gin`)
 - GORM + PostgreSQL
-- Firebase Admin SDK (optional for local run)
+- Firebase Admin SDK (опционально для локального запуска)
 
-## Project structure
+## Структура проекта
 
-- `cmd/server/main.go` - application entrypoint.
-- `internal/transport/router` - route registration and grouping.
-- `internal/handler` - HTTP handlers.
-- `internal/usecase` - business logic.
-- `internal/repository` - data access layer.
-- `internal/model` + `internal/migration` - schema and migrations.
-- `internal/di/di.go` - dependency wiring.
+- `cmd/server/main.go` - точка входа приложения.
+- `internal/transport/router` - регистрация роутов и группировка endpoint-ов.
+- `internal/handler` - HTTP-слой (валидация/ответы).
+- `internal/usecase` - бизнес-логика и orchestration.
+- `internal/repository` - работа с БД.
+- `internal/model` и `internal/migration` - модели и миграции.
+- `internal/di/di.go` - сборка зависимостей приложения.
 
-## Quick start
+## Быстрый запуск
 
-### 1. Prepare environment
+1. Подготовить окружение:
 
 ```bash
 cp .env.example .env
 ```
 
-Minimal local values are already prefilled in `.env.example` for PostgreSQL.
-
-Optional for full auth/integration features:
-
-- `FIREBASE_CREDS_FILE` or `FIREBASE_CREDS_JSON`
-- `FIREBASE_WEB_API_KEY`
-- `OPENAI_KEY`
-- `TG_BOT_TOKEN`
-
-If Firebase credentials are not provided, Firebase-dependent endpoints return `503`, but the server still starts and core infra can be reviewed.
-
-### 2. Start PostgreSQL
+2. Поднять PostgreSQL:
 
 ```bash
 docker compose -f compose.yaml up -d db
 ```
 
-### 3. Run the API
+3. Запустить API:
 
 ```bash
 go run ./cmd/server
 ```
 
-Service starts on `http://localhost:${API_PORT}` (`8000` in `.env.example`).
+API стартует на `http://localhost:${API_PORT}` (`8000` в `.env.example`).
 
-### 4. Health check
+4. Проверить health:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-Expected response:
+Ожидаемый ответ:
 
 ```json
 {"status":"ok"}
 ```
 
-## Development commands
+## Полезные команды
 
 ```bash
-make deps        # download modules
-make run         # run server
-make build       # build binary
+make deps        # скачать зависимости
+make run         # запустить сервер
+make build       # собрать бинарник
 make lint        # go fmt + go vet
+go test ./...    # прогнать тесты
 ```
 
-## Tests
+## Конфигурация и безопасность
 
-```bash
-go test ./...
-```
-
-## Security and showcase defaults
-
-- Development/debug auth endpoints are disabled by default.
-- Enable them only for local debugging with:
+- Секреты в репозиторий не коммитятся, только `.env.example`.
+- Для полного набора auth/integration сценариев нужны:
+  - `FIREBASE_CREDS_FILE` или `FIREBASE_CREDS_JSON`
+  - `FIREBASE_WEB_API_KEY`
+  - `OPENAI_KEY`
+  - `TG_BOT_TOKEN`
+- Если Firebase не настроен, сервер всё равно стартует; Firebase-зависимые endpoint-ы отвечают `503`.
+- Dev/debug роуты выключены по умолчанию. Для локальной отладки:
 
 ```bash
 ENABLE_DEV_ROUTES=true
 ```
 
-- No secrets are committed; use `.env` locally.
+## Что смотреть рекрутеру в первую очередь
 
-## Notes for reviewers
-
-- Main focus for review is Go backend design and maintainability.
-- Feature areas include chat, prompts, users, notes, todos, subscriptions, notifications, and cron-triggered flows.
+- `internal/di/di.go` - как организована сборка приложения.
+- `internal/transport/router/router.go` - общий composition API-слоя.
+- `internal/usecase` - уровень бизнес-правил.
+- `internal/repository` - изоляция доступа к данным.
+- `internal/transport/middleware` - cross-cutting логика (auth/лимиты).

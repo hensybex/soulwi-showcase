@@ -86,11 +86,3 @@ go test ./...    # прогнать тесты
 ```bash
 ENABLE_DEV_ROUTES=true
 ```
-
-## Что смотреть рекрутеру в первую очередь
-
-- `internal/di/di.go` - как организована сборка приложения.
-- `internal/transport/router/router.go` - общий composition API-слоя.
-- `internal/usecase` - уровень бизнес-правил.
-- `internal/repository` - изоляция доступа к данным.
-- `internal/transport/middleware` - cross-cutting логика (auth/лимиты).
